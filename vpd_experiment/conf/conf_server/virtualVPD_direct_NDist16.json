@@ -1,0 +1,14 @@
+{
+  "experimentName": "Meteo France Test for QunitForm VPD Calculation Mesos Server",
+  "rootPath": "/home/vargasf/scratch/QunitForm/vpd_experiment/",
+  "graphPath": "inputs/data/D20_16.ttl",
+  "shapePath": "inputs/shape_vpd.ttl",
+  "queryPath" : "inputs/queries/q1_vpd_direct.sparql",
+  "outInferencePath" :"outputs/inference_D20_16_vpd-direct.ttl",
+  "outReportPath": "outputs/report_D20_16_vpd-direct.json" ,
+  "outResultSet" : "outputs/result_set_D20_16_vpd-direct.csv",
+  "outShape": "outputs/outShape.ttl",
+  "method" : "VIRTUAL"
+}
+
+

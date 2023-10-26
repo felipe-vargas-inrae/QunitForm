@@ -1,0 +1,11 @@
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX meteo-ex: <http://www.meteo-example.org#>
+PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT  ?obs1  ?vpd
+WHERE {
+    	?obs1 a sosa:Observation.
+	?obs1 meteo-ex:VPDDirect ?vpdObject.
+	?vpdObject qudt:numericValue ?vpd.
+}

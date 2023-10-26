@@ -1,0 +1,14 @@
+{
+  "experimentName": "Meteo France Test for QunitForm VPD Calculation",
+  "rootPath": "",
+  "graphPath": "data/inference_dist6.ttl",
+  "shapePath": "shape_vpd.ttl",
+  "queryPath" : "queries/q2_vpd_conver.sparql",
+  "outInferencePath" :"output/inference_dist6_vpd-conver.ttl",
+  "outReportPath": "output/report_dist6_vpd-conver.json" ,
+  "outResultSet" : "output/result_set_dist6_vpd-conver.csv",
+  "outShape": "outShape.ttl",
+  "method" : "VIRTUAL"
+}
+
+ 

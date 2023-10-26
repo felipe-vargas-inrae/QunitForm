@@ -1,0 +1,123 @@
+@prefix meteo-ex: <http://www.meteo-example.org#> .
+@prefix owl:      <http://www.w3.org/2002/07/owl#> .
+@prefix qudt:     <http://qudt.org/schema/qudt/> .
+@prefix rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+@prefix sh-math:  <http://www.inrae.fr/shacl-math/> .
+@prefix sosa:     <http://www.w3.org/ns/sosa/> .
+@prefix sparql:   <http://datashapes.org/sparql#> .
+@prefix time:     <http://www.w3.org/2006/time#> .
+@prefix unit:     <http://qudt.org/vocab/unit/> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix bkn:      <http://www.inrae.fr/shacl-math/expression/> .
+@prefix lfn:      <http://www.dotnetrdf.org/leviathan#> .
+
+
+sosa:Platform  rdf:type  rdfs:Class .
+
+<http://www.meteo-example.org>
+        rdf:type  owl:Ontology .
+
+sosa:Sensor  rdf:type  rdfs:Class .
+
+<http://dbpedia.org/ontology>
+        sh:declare  [ rdf:type      sh:PrefixDeclaration ;
+                      sh:namespace  "http://www.meteo-example.org#"^^xsd:anyURI ;
+                      sh:prefix     "meteo-ex"
+                    ] ;
+        sh:declare  [ rdf:type      sh:PrefixDeclaration ;
+                      sh:namespace  "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ;
+                      sh:prefix     "rdfs"
+                    ] ;
+        sh:declare  [ rdf:type      sh:PrefixDeclaration ;
+                      sh:namespace  "http://www.w3.org/2001/XMLSchema#"^^xsd:anyURI ;
+                      sh:prefix     "xsd"
+                    ] ;
+        sh:declare  [ rdf:type      sh:PrefixDeclaration ;
+                      sh:namespace  "http://qudt.org/vocab/"^^xsd:anyURI ;
+                      sh:prefix     "qudt"
+                    ] .
+
+# # expressions
+# # air temperature in celsius 
+bkn:tempInCelsius
+    rdf:type sh-math:NodeExpression ;
+    sh-math:toTargetUnit ( [sh:path meteo-ex:airTemperatureConv] unit:DEG_C).
+
+# relative humidity in percentage 
+# VPD-Conver
+# es
+bkn:esConver
+  rdf:type sh-math:NodeExpression ;
+  sparql:multiply (
+    0.6108
+    [ lfn:pow (
+      2.71828
+      [ sparql:divide (
+        [ sparql:multiply (
+          17.27 bkn:tempInCelsius) ]
+        [ sparql:add ( bkn:tempInCelsius 237.3 ) ] ) ] ) ] ) .
+# ea
+bkn:eaConver
+  rdf:type sh-math:NodeExpression ;
+  sparql:divide (
+    [ sparql:multiply (  bkn:esConver [sh:path (meteo-ex:airRelativeHumidityConv qudt:numericValue) ] ) ] 
+    100 ).
+# vpdConver
+bkn:vpdConver
+  rdf:type sh-math:NodeExpression ;
+  sh-math:createQuantity ( [ sparql:subtract (bkn:esConver bkn:eaConver)] 
+                                unit:KiloPA).
+
+# ##################################################################
+#VPD Direct
+bkn:tempPath
+    rdf:type sh-math:NodeExpression ;
+    sh:path (meteo-ex:airTemperatureConv qudt:numericValue).
+# es
+bkn:esDirect
+  rdf:type sh-math:NodeExpression ;
+  sparql:multiply (
+    0.6108
+    [ lfn:pow (
+      2.71828
+      [ sparql:divide (
+        [ sparql:multiply (
+          17.27 bkn:tempPath) ]
+        [ sparql:add ( bkn:tempPath 237.3 ) ] ) ] ) ] ) .
+# ea
+bkn:eaDirect
+  rdf:type sh-math:NodeExpression ;
+  sparql:divide (
+    [ sparql:multiply (  bkn:esDirect [sh:path (meteo-ex:airRelativeHumidityConv qudt:numericValue) ] ) ] 
+    100.0 ).
+# vpdDirect
+bkn:vpdDirect
+  rdf:type sh-math:NodeExpression ;
+  sh-math:createQuantity ( [sparql:subtract (bkn:esDirect bkn:eaDirect)] 
+                                unit:KiloPA).
+
+sosa:Observation  rdf:type  sh:NodeShape , rdfs:Class ;
+        sh:rule   [ rdf:type     sh-math:NodeRule ;
+                    sh:datatype  xsd:decimal ;
+                    sh:path      meteo-ex:VPDConver ;
+                    #sh:values [sparql:multiply ( [sh:path (meteo-ex:airTemperatureConv qudt:numericValue)]  10 )];
+                    sh:values   bkn:vpdConver;
+                  ]; # transform the temp to celsius for all the observations
+
+        sh:rule   [ rdf:type     sh-math:NodeRule ;
+                    sh:datatype  xsd:decimal ;
+                    sh:path      meteo-ex:VPDDirect ;
+                    sh:values    bkn:vpdDirect;
+                  ]; # take the original as it is and compute the values
+        sh:rule   [ rdf:type     sh-math:NodeRule ;
+                    sh:datatype  xsd:decimal ;
+                    sh:path      meteo-ex:VPDOnlyCelsius ;
+                    sh:values    bkn:vpdDirect;
+                     #only execute when data is in celsius
+                    sh:condition  [ rdf:type  sh:PropertyShape ;
+                                    sh:path (meteo-ex:airTemperatureConv qudt:unit) ;
+                                    sh:in (unit:DEG_C) ] ;
+                  ].
+
